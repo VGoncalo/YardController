@@ -2,49 +2,42 @@ import pymongo, time
 from pymongo import MongoClient
 
 DB_URI = "mongodb://localhost:27017/"
-DB_NAME = "home_server"
+DB_NAME = "yard_data_collection"
 
 client = MongoClient(DB_URI)
-home_serverdb = client[DB_NAME]
-devices = None
-measurements = None
+data = client[DB_NAME]
 
 
 def check_db_connection():
-    if home_serverdb is None:
+    if data is None:
         return "ERROR: connection to mongodb"    
     else:
-        return home_serverdb
+        return data
 
 def get_db_collections():
-    collections = home_serverdb.list_collection_names()
-    if "devices" in collections and "measurements" in collections:
-        devices = home_serverdb["devices"]
-        measurements = home_serverdb["measurements"]
-        tables = {"devices":devices, "measurements":measurements}
-        return tables
+    collections = data.list_collection_names()
+    if "messages" in collections:
+        measurements = data["messages"]
+        return measurements
     else:
         return "ERROR: failed to get mongodb collections"
 
-def insert_measurement(device, val):
-	x = home_serverdb["measurements"].insert_one({"device":device,"value":val})
-	print(x.inserted_id)
-
-def health_check_db():
+def insert_measurement(record):
     try:
-        # check devices
-        devices_tab = home_serverdb["devices"]
-        test_device = devices_tab.insert_one({"device":"DeviceHealthCheck","value":"TestValue"})
-        devices_query = {"name":"DeviceHealthCheck"}
-        deleted_devices = home_serverdb["devices"].delete_many(devices_query)
-        query_devices_result = devices_tab.find(devices_query)
-        # check measurements
-        measure_tab = home_serverdb["measurements"]
-        test_measure = measure_tab.insert_one({"data":time.asctime(time.localtime()),"device":"DeviceHealthCheck", "value":"heath-test-value"})
-        measurements_query = {"device":"DeviceHealthCheck"}
-        deleted_measure = home_serverdb["measurements"].delete_many(measurements_query)
-        query_measure_result = measure_tab.find(measurements_query)
-    except:
-        print("ERROR: failed to perform check on mongo db")
+        rec = data["messages"].insert_one(record)
+        return rec
+    except Exception as e:
+        return str(e)
+
+def check_db():
+    try:
+        data_table = data["messages"]
+        test_entry = data_table.insert_one({"device":"DeviceHealthCheck","value":"TestValue"})
+        devices_query = {"device":"DeviceHealthCheck"}
+        deleted_devices = data["messages"].delete_many(devices_query)
+        query_devices_result = data_table.find(devices_query)
+        return "mongodb is OK"
+    except Exception as e:
+        return "ERROR: db is KO" + str(e)
     
     
