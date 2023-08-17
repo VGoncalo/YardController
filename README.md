@@ -1,7 +1,8 @@
 # YardController
 wifi yard controlling system 
 
-[dependencies].
+dependencies:
 - pymongo
 - paho
+- Rpi, Arduinos, ESP32 & Other things
 
